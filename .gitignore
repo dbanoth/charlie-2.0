@@ -120,6 +120,13 @@ logs/
 *.sqlite
 *.sqlite3
 
+# Vector Store (ChromaDB - if using local)
+vector_store/
+chroma_data/
+
+# Docker
+*.tar
+
 # Coverage reports
 htmlcov/
 .coverage
