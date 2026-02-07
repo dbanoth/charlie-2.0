@@ -6,6 +6,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from config import USE_VERTEX_AI, LLM_MODEL, GCP_PROJECT, GCP_LOCATION
 from database import db
 from rag import rag
+from chat_history import chat_store
 
 # Initialize LLM based on configuration
 if USE_VERTEX_AI:
@@ -228,28 +229,33 @@ def build_graph():
 agent = build_graph()
 
 
-def chat(user_input: str, thread_id: str = "default") -> str:
+def chat(user_input: str, thread_id: str = "default", user_id: str = "anonymous") -> str:
     """
     Send a message to the chatbot and get a response.
 
     Args:
         user_input: The user's message
         thread_id: Session/thread identifier for conversation memory
+        user_id: User identifier for persistent chat history
 
     Returns:
         The agent's response
     """
-    config = {"configurable": {"thread_id": thread_id}}
+    config = {"configurable": {"thread_id": f"{user_id}_{thread_id}"}}
 
-    # Get current state to preserve message history
-    current_state = agent.get_state(config)
-    messages = current_state.values.get("messages", []) if current_state.values else []
+    # Load messages from Firestore (persistent storage)
+    messages = chat_store.get_messages(user_id, thread_id)
 
     # Run the agent
     result = agent.invoke(
         {"user_input": user_input, "messages": messages},
         config
     )
+
+    # Save updated messages to Firestore
+    updated_messages = result.get("messages", [])
+    if updated_messages:
+        chat_store.save_messages(user_id, thread_id, updated_messages)
 
     return result.get("response", "I apologize, but I couldn't generate a response.")
 

@@ -52,6 +52,7 @@ TOP_K_RESULTS = 10
 # Firestore Configuration
 FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)").strip()
 FIRESTORE_COLLECTION = "livestock_knowledge"
+CHAT_HISTORY_COLLECTION = "chat_sessions"
 
 # Print configuration on import
 if USE_VERTEX_AI:
